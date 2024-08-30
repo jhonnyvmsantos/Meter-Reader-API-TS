@@ -14,7 +14,7 @@ app.use(cors());
 
 app.use(express.json());
 
-app.use("/api", routes);
+app.use("/", routes);
 
 app.use('/images', express.static(path.join(__dirname, '../assets/image/temp')));
 
@@ -38,8 +38,11 @@ function setApiKey(): string {
 
 const api_key: string = setApiKey();
 const genAI = new GoogleGenerativeAI(api_key);
+
+// Por favor, não fazer requisições sem intervalo de tempo para a IA analizar... Ela trava, voltando após muitas tentativas.
 const model = genAI.getGenerativeModel({
-  model: "gemini-1.5-flash",
+  model: "gemini-1.5-pro-001",
 });
+// O ideal seria usar o gemini-1.5-flash, mas ele quebra ao tentar analizar um medidor de "gas"
 
 export { genAI, model };

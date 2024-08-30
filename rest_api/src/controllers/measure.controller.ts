@@ -13,9 +13,13 @@ export interface UploadMeterToAnalysis {
   measure_type: string;
 }
 
-export interface ConfirmAnalyzedValue {
+interface ConfirmAnalyzedValue {
   measure_uuid: string;
   confirmed_value: number;
+}
+interface ListingCostumerMeasures {
+  costumer_code: string;
+  measure_type: string | undefined;
 }
 
 router.post("/upload", async (req: Request, res: Response): Promise<void> => {
@@ -27,8 +31,15 @@ router.post("/upload", async (req: Request, res: Response): Promise<void> => {
   try {
     data = req.body;
     format = base64FormatValidation(data.image);
+    const validate: boolean = !isNaN(new Date(data.measure_datetime).getTime());
 
-    if (format === undefined) {
+    if (
+      !validate ||
+      data.customer_code.length !== 36 ||
+      format === undefined ||
+      (data.measure_type.toLowerCase() !== "water" &&
+        data.measure_type.toLowerCase() !== "gas")
+    ) {
       throw new Error();
     }
   } catch (error) {
@@ -40,20 +51,39 @@ router.post("/upload", async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
+  // CONFIRM COSTUMER
+
+  try {
+    const validate: boolean = await services.costumerCodeConfirm(
+      data.customer_code
+    );
+
+    if (!validate) {
+      throw new Error();
+    }
+  } catch (error) {
+    res.status(404).json({
+      error_code: "COSTUMER_NOT_FOUND.",
+      error_description: "Cliente não encontrado.",
+    });
+    return;
+  }
+
   // DB MONTH VALIDATE
 
   try {
     const date: string = data.measure_datetime.split("-")[1];
     const row: boolean = await services.meterMonthValidate(
       parseInt(date),
-      data.customer_code
+      data.customer_code,
+      data.measure_type
     );
 
     if (!row) {
-      throw new Error("STOP!");
+      throw new Error();
     }
   } catch (error) {
-    res.status(400).json({
+    res.status(409).json({
       error_code: "DOUBLE_REPORT.",
       error_description: "Já existe uma leitura para este tipo no mês atual.",
     });
@@ -99,6 +129,10 @@ router.patch("/confirm", async (req: Request, res: Response): Promise<void> => {
 
   try {
     data = req.body;
+
+    if (data.measure_uuid.length !== 36) {
+      throw new Error();
+    }
   } catch (error) {
     res.status(400).json({
       error_code: "INVALID_DATA.",
@@ -121,7 +155,7 @@ router.patch("/confirm", async (req: Request, res: Response): Promise<void> => {
   } catch (error) {
     res.status(404).json({
       error_code: "MEASURE_NOT_FOUND.",
-      error_description: "Leitura do mês já realizada.",
+      error_description: "Leitura não encontrada.",
     });
     return;
   }
@@ -139,15 +173,18 @@ router.patch("/confirm", async (req: Request, res: Response): Promise<void> => {
   } catch (error) {
     res.status(409).json({
       error_code: "CONFIRMATION_DUPLICATE.",
-      error_description: "Leitura do mês já realizada.",
+      error_description: "Leitura já confirmada.",
     });
     return;
   }
 
-  // UPDATE HAS_CONFIMED MEASURE VALUE
+  // UPDATE CONFIRMED MEASURE VALUE
 
   try {
-    await services.updateHasConfirmedValue(data.measure_uuid);
+    await services.updateConfirmedValue(
+      data.confirmed_value,
+      data.measure_uuid
+    );
 
     res.status(200).json({
       success: true,
@@ -161,5 +198,55 @@ router.patch("/confirm", async (req: Request, res: Response): Promise<void> => {
     return;
   }
 });
+
+router.get("/:costumer_code/list", async (req: Request, res: Response): Promise<void> => {
+    let data: ListingCostumerMeasures;
+
+    // DATA VALIDATE
+
+    try {
+      const type: string | undefined = req.query.measure_type as string;
+      data = {
+        costumer_code: req.params.costumer_code,
+        measure_type: type,
+      };
+
+      if (type !== undefined) {
+        if (type.toLowerCase() !== "gas" && type.toLowerCase() !== "water") {
+          throw new Error();
+        }
+      }
+    } catch (error) {
+      res.status(400).json({
+        error_code: "INVALID_TYPE.",
+        error_description: "Tipo de medição não permitida.",
+      });
+      return;
+    }
+
+    try {
+      const result = await services.getAllMeasuresCostumer(
+        data.costumer_code,
+        data.measure_type
+      ) as any[];
+
+      if (result.length <= 0) {
+        throw new Error();
+      }
+
+      res.status(200).json({
+        costumer_code: data.costumer_code,
+        measures: result,
+      });
+      return;
+    } catch (error) {
+      res.status(400).json({
+        error_code: "MEASURES_NOT_FOUND.",
+        error_description: "Nenhum registro encontrado.",
+      });
+      return;
+    }
+  }
+);
 
 export default router;
