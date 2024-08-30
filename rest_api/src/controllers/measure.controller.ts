@@ -224,6 +224,8 @@ router.get("/:costumer_code/list", async (req: Request, res: Response): Promise<
       return;
     }
 
+    // LISTING ALL MEASURES
+
     try {
       const result = await services.getAllMeasuresCostumer(
         data.costumer_code,

@@ -28,6 +28,8 @@ function base64FormatValidation(base64String: string): ResBase64 | undefined {
       };
     }
   }
+
+  return undefined
 }
 
 export { base64FormatSeparate, base64FormatValidation };

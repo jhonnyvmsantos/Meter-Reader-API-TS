@@ -34,5 +34,14 @@ export async function convertBase64ToTempUrl(base64Data: string): Promise<{ url:
   // Gerar URL temporária
   const url = `http://localhost:${port}/images/${fileName}`;
 
+  setTimeout(async () => {
+    try {
+      await unlink(filePath);
+      console.log(`Arquivo removido: ${filePath}`);
+    } catch (error) {
+      console.log(`Erro ao remover o arquivo: ${error}`);
+    }
+  }, 60000); // 1 minuto
+
   return { url, fileName };
 }
