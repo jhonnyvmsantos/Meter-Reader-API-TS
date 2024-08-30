@@ -8,7 +8,7 @@ import path from "path";
 dotenv.config();
 
 const app = express();
-export const port : string | number = process.env.PORT || 3333;
+export const port : number = 3000;
 
 app.use(cors());
 
@@ -16,7 +16,7 @@ app.use(express.json());
 
 app.use("/", routes);
 
-app.use('/images', express.static(path.join(__dirname, '../assets/image/temp')));
+app.use('/images', express.static(path.join(__dirname, './temp')));
 
 app.listen(port, () : void => {
   console.log(`Servidor rodando em http://localhost:${port}`);
@@ -39,9 +39,9 @@ function setApiKey(): string {
 const api_key: string = setApiKey();
 const genAI = new GoogleGenerativeAI(api_key);
 
-// Por favor, não fazer requisições sem intervalo de tempo para a IA analizar... Ela trava, voltando após muitas tentativas.
+// Por favor, tenha em mente que o model gemini-1.5-pro funciona quando quer...
 const model = genAI.getGenerativeModel({
-  model: "gemini-1.5-pro-001",
+  model: "gemini-1.5-pro",
 });
 // O ideal seria usar o gemini-1.5-flash, mas ele quebra ao tentar analizar um medidor de "gas"
 
