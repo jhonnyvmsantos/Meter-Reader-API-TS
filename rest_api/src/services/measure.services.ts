@@ -1,12 +1,7 @@
-import { Buffer } from "buffer";
 import { Part } from "@google/generative-ai";
 import db from "../database/connect";
-import { genAI, model } from "..";
-import {
-  ResponseMeterAnalysis,
-  UploadMeterToAnalysis,
-} from "../controllers/measure.controller";
-import { QueryResult } from "mysql2";
+import { model } from "..";
+import { UploadMeterToAnalysis } from "../controllers/measure.controller";
 
 async function meterAnalysis(base64: string[], meter: string): Promise<string> {
   const prompt: string = `Analysis the meter of a ${meter} and bring me the measured value, just the value`;
@@ -43,6 +38,7 @@ async function createMeasurementRecord(
 
   const conn = await db.connect();
   const [rows] = await conn.query(sql, record);
+  console.log(rows);
 
   conn.end();
 }
@@ -61,4 +57,40 @@ async function meterMonthValidate(
   return JSON.stringify(rows).includes("0");
 }
 
-export default { meterAnalysis, createMeasurementRecord, meterMonthValidate };
+async function measureCodeConfirm(uuid: string): Promise<boolean> {
+  const sql: string =
+    "SELECT COUNT(a.measure_uuid) AS count FROM tbl_measure AS a WHERE a.measure_uuid = ?;";
+
+  const conn = await db.connect();
+  const [rows] = await conn.query(sql, uuid);
+  conn.end();
+  return JSON.stringify(rows).includes("1");
+}
+
+async function hasMeasureConfirmed(uuid: string): Promise<boolean> {
+  const sql: string =
+    "SELECT a.has_confirmed FROM tbl_measure AS a WHERE a.measure_uuid = ?;";
+
+  const conn = await db.connect();
+  const [rows] = await conn.query(sql, uuid);
+  conn.end();
+  return !JSON.stringify(rows).includes("1");
+}
+
+async function updateHasConfirmedValue(uuid: string): Promise<void> {
+  const sql: string =
+    "UPDATE tbl_measure SET has_confirmed = 1 WHERE measure_uuid = ?;";
+
+  const conn = await db.connect();
+  const [rows] = await conn.query(sql, uuid);
+  conn.end();
+}
+
+export default {
+  meterAnalysis,
+  createMeasurementRecord,
+  meterMonthValidate,
+  measureCodeConfirm,
+  hasMeasureConfirmed,
+  updateHasConfirmedValue,
+};

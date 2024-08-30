@@ -8,7 +8,7 @@ import path from "path";
 dotenv.config();
 
 const app = express();
-export const port = process.env.PORT || 3333;
+export const port : string | number = process.env.PORT || 3333;
 
 app.use(cors());
 
@@ -18,7 +18,7 @@ app.use("/api", routes);
 
 app.use('/images', express.static(path.join(__dirname, '../assets/image/temp')));
 
-app.listen(port, () => {
+app.listen(port, () : void => {
   console.log(`Servidor rodando em http://localhost:${port}`);
 });
 
