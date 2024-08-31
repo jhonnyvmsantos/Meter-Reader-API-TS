@@ -14,6 +14,7 @@ async function meterAnalysis(base64: string[], meter: string): Promise<string> {
   };
 
   const result = await model.generateContent([prompt, data]);
+  console.log(result.response.text());
   return result.response.text();
 }
 
@@ -23,7 +24,8 @@ async function createMeasurementRecord(
   value: number,
   url: string
 ): Promise<void> {
-  const sql: string = "INSERT INTO tbl_measure (measure_uuid, image, costumer_code, measure_type, measure_datetime, measure_value, image_url) VALUE (?, ?, ?, ?, ?, ?, ?);";
+  const sql: string =
+    "INSERT INTO tbl_measure (measure_uuid, image, costumer_code, measure_type, measure_datetime, measure_value, image_url) VALUE (?, ?, ?, ?, ?, ?, ?);";
 
   const record: (string | number)[] = [
     uuid,
@@ -45,38 +47,39 @@ async function meterMonthValidate(
   costumer_code: string,
   measure_type: string
 ): Promise<boolean> {
-  const sql: string = "SELECT COUNT(a.measure_uuid) AS count FROM tbl_measure AS a INNER JOIN tbl_costumer AS b ON b.costumer_code = a.costumer_code WHERE MONTH(a.measure_datetime) = ? AND a.measure_type = ? AND a.costumer_code = ?;";
+  const sql: string =
+    "SELECT COUNT(a.measure_uuid) AS count FROM tbl_measure AS a WHERE MONTH(a.measure_datetime) = ? AND a.measure_type = ? AND a.costumer_code = ?;";
 
-  const data: (string | number)[] = [month, measure_type.toUpperCase(), costumer_code];
+  const data: (string | number)[] = [
+    month,
+    measure_type.toUpperCase(),
+    costumer_code,
+  ];
   const conn = await db.connect();
   const [rows] = await conn.query(sql, data);
+  console.log(rows);
   conn.end();
   return JSON.stringify(rows).includes("0");
 }
 
 async function measureCodeConfirm(uuid: string): Promise<boolean> {
-  const sql: string = "SELECT COUNT(a.measure_uuid) AS count FROM tbl_measure AS a WHERE a.measure_uuid = ?;";
+  const sql: string =
+    "SELECT COUNT(a.measure_uuid) AS count FROM tbl_measure AS a WHERE a.measure_uuid = ?;";
 
   const conn = await db.connect();
   const [rows] = await conn.query(sql, uuid);
-  conn.end();
-  return JSON.stringify(rows).includes("1");
-}
-
-async function costumerCodeConfirm(uuid: string): Promise<boolean> {
-  const sql: string = "SELECT COUNT(a.costumer_code) AS count FROM tbl_costumer AS a WHERE a.costumer_code = ?;";
-
-  const conn = await db.connect();
-  const [rows] = await conn.query(sql, uuid);
+  console.log(rows);
   conn.end();
   return JSON.stringify(rows).includes("1");
 }
 
 async function hasMeasureConfirmed(uuid: string): Promise<boolean> {
-  const sql: string = "SELECT a.has_confirmed FROM tbl_measure AS a WHERE a.measure_uuid = ?;";
+  const sql: string =
+    "SELECT a.has_confirmed FROM tbl_measure AS a WHERE a.measure_uuid = ?;";
 
   const conn = await db.connect();
   const [rows] = await conn.query(sql, uuid);
+  console.log(rows);
   conn.end();
   return !JSON.stringify(rows).includes("1");
 }
@@ -85,7 +88,8 @@ async function updateConfirmedValue(
   value: number,
   uuid: string
 ): Promise<void> {
-  const sql: string = "UPDATE tbl_measure SET has_confirmed = 1, measure_value = ? WHERE measure_uuid = ?;";
+  const sql: string =
+    "UPDATE tbl_measure SET has_confirmed = 1, measure_value = ? WHERE measure_uuid = ?;";
 
   const data: (string | number)[] = [value, uuid];
   const conn = await db.connect();
@@ -94,7 +98,8 @@ async function updateConfirmedValue(
 }
 
 async function getAllMeasuresCostumer(uuid: string, type: string | undefined) {
-  let sql: string = "SELECT a.measure_uuid, a.measure_datetime, a.measure_type, a.has_confirmed, a.image_url FROM tbl_measure AS a INNER JOIN tbl_costumer AS b ON b.costumer_code = a.costumer_code WHERE a.has_confirmed = 1 AND a.costumer_code = ?";
+  let sql: string =
+    "SELECT a.measure_uuid, a.measure_datetime, a.measure_type, a.has_confirmed, a.image_url FROM tbl_measure AS a WHERE a.has_confirmed = 1 AND a.costumer_code = ?";
 
   let data: string | string[] = uuid;
 
@@ -105,6 +110,7 @@ async function getAllMeasuresCostumer(uuid: string, type: string | undefined) {
 
   const conn = await db.connect();
   const [rows] = await conn.query(sql, data);
+  console.log(rows);
   conn.end();
   return rows;
 }
@@ -116,6 +122,5 @@ export default {
   measureCodeConfirm,
   hasMeasureConfirmed,
   updateConfirmedValue,
-  costumerCodeConfirm,
   getAllMeasuresCostumer,
 };

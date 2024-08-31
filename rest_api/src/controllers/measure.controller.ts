@@ -35,7 +35,6 @@ router.post("/upload", async (req: Request, res: Response): Promise<void> => {
 
     if (
       !validate ||
-      data.customer_code.length !== 36 ||
       format === undefined ||
       (data.measure_type.toLowerCase() !== "water" &&
         data.measure_type.toLowerCase() !== "gas")
@@ -47,24 +46,6 @@ router.post("/upload", async (req: Request, res: Response): Promise<void> => {
       error_code: "INVALID_DATA.",
       error_description:
         "Os dados fornecidos no corpo da requisição são inválidos.",
-    });
-    return;
-  }
-
-  // CONFIRM COSTUMER
-
-  try {
-    const validate: boolean = await services.costumerCodeConfirm(
-      data.customer_code
-    );
-
-    if (!validate) {
-      throw new Error();
-    }
-  } catch (error) {
-    res.status(404).json({
-      error_code: "COSTUMER_NOT_FOUND.",
-      error_description: "Cliente não encontrado.",
     });
     return;
   }
@@ -199,7 +180,9 @@ router.patch("/confirm", async (req: Request, res: Response): Promise<void> => {
   }
 });
 
-router.get("/:costumer_code/list", async (req: Request, res: Response): Promise<void> => {
+router.get(
+  "/:costumer_code/list",
+  async (req: Request, res: Response): Promise<void> => {
     let data: ListingCostumerMeasures;
 
     // DATA VALIDATE
@@ -227,10 +210,10 @@ router.get("/:costumer_code/list", async (req: Request, res: Response): Promise<
     // LISTING ALL MEASURES
 
     try {
-      const result = await services.getAllMeasuresCostumer(
+      const result = (await services.getAllMeasuresCostumer(
         data.costumer_code,
         data.measure_type
-      ) as any[];
+      )) as any[];
 
       if (result.length <= 0) {
         throw new Error();
