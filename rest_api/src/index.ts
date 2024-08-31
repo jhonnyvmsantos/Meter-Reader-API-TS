@@ -19,7 +19,7 @@ app.use("/", routes);
 app.use("/images", express.static(path.join(__dirname, "./temp")));
 
 app.listen(port, (): void => {
-  console.log(`Servidor rodando em http://localhost:${port}`);
+  console.log(`Servidor rodando em http://localhost:${port}... Favor, espere 30 segundos para construirmos a estrutura do Banco de Dados.`);
 });
 
 // GOOGLE_GEMINI_API CONFIGURATION
@@ -29,7 +29,7 @@ function setApiKey(): string {
 
   if (key === undefined) {
     throw new Error(
-      `A \"API_KEY\", localizada no arquivo \".env\", não está definida.`
+      `A \"GEMINI_API_KEY\", localizada no arquivo \".env\", não está definida.`
     );
   }
 

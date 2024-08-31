@@ -5,4 +5,4 @@ OBS: A api do Google Gemini, modelo "gemini-1.5-pro" trava constantemente e traz
 
 OBS: O arquivo .env contendo a GEMINI_API_KEY é necessário para rodar a api, seja local ou através do docker. Propoitalmente, a api é quebrada na falta do arquivo/key.
 
-OBS: A estrutura do Banco de Dados MySql está dentro da pasta "db". Suas informações de conexões estão dentro do "docker-compose.yml".
+OBS: A estrutura do Banco de Dados MySql será construida de forma automática, após 30 segundos a partir da inicialização do projeto.

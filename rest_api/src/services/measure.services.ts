@@ -3,6 +3,20 @@ import db from "../database/connect";
 import { model } from "..";
 import { UploadMeterToAnalysis } from "../controllers/measure.controller";
 
+async function createDBEstructure(): Promise<void> {
+  let sql: string =
+    "CREATE TABLE IF NOT EXISTS tbl_measure (measure_uuid VARCHAR(100) PRIMARY KEY, image LONGBLOB, costumer_code VARCHAR(100), measure_datetime DATETIME DEFAULT NOW(), measure_type VARCHAR(5), measure_value INT, has_confirmed BOOLEAN DEFAULT FALSE, image_url VARCHAR(2083));";
+
+  const conn = await db.connect();
+  await conn.query(sql);
+  conn.end();
+  console.log("Estrutura do Banco de Dados preparada.");
+}
+
+setTimeout(() => {
+  createDBEstructure();
+}, 30000);
+
 async function meterAnalysis(base64: string[], meter: string): Promise<string> {
   const prompt: string = `Analyze the ${meter.toLowerCase()} meter and bring me the measured value, only the value.`;
 
