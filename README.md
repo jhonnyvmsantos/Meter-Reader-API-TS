@@ -38,7 +38,7 @@ A estrutura do Banco de Dados MySql será construida de forma automática, após
 Para fazer o deploy desse projeto, rode...
 
 ```bash
-  npm run deploy
+  npm run dev
 ```
 
 Comando para subir o projeto pro Docker, rode...
